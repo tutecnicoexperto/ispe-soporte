@@ -42,6 +42,9 @@ env:
   FLUTTER_RUST_BRIDGE_VERSION: "1.80.1"
   VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
   ISPE_VER: "${{ inputs.version }}-${{ inputs.revision }}"
+  # Python en Windows usa cp1252 por defecto: forzar UTF-8 (acentos en los textos de marca)
+  PYTHONUTF8: "1"
+  PYTHONIOENCODING: "utf-8"
 
 jobs:
   # 1) Puente Flutter⇄Rust (se genera en Linux, igual que en RustDesk)

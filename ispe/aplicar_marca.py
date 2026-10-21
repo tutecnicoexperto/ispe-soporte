@@ -51,14 +51,14 @@ def sustituir(src, ruta, pares):
         texto = texto.replace(viejo, nuevo)
     with open(p, "w", encoding="utf-8") as f:
         f.write(texto)
-    print(f"  ✓ {ruta}")
+    print(f"  OK {ruta}")
 
 
 def copiar(src, origen, destinos):
     """Copia un fichero de ispe/marca a una o varias rutas del código."""
     for d in destinos:
         shutil.copy(os.path.join(MARCA, origen), os.path.join(src, d))
-        print(f"  ✓ {d}")
+        print(f"  OK {d}")
 
 
 def main():
@@ -109,7 +109,7 @@ def main():
     ver = toml.split('version = "', 1)[1].split('"', 1)[0]
     with open(p, "w", encoding="utf-8") as f:
         f.write(toml.replace(f'version = "{ver}"', f'version = "{ver}-{revision}"', 1))
-    print(f"  ✓ Cargo.toml: versión {ver}-{revision}")
+    print(f"  OK Cargo.toml: versión {ver}-{revision}")
     # build.py compila con --locked: Cargo.lock tiene que llevar la misma versión del paquete
     sustituir(src, "Cargo.lock", [
         (f'name = "rustdesk"\nversion = "{ver}"', f'name = "rustdesk"\nversion = "{ver}-{revision}"'),
