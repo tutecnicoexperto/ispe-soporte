@@ -1,0 +1,20 @@
+{
+  "app-name": "ISPE-Soporte",
+  "conn-type": "incoming",
+  "disable-account": "Y",
+  "disable-ab": "Y",
+  "override-settings": {
+    "custom-rendezvous-server": "remoto.negociosdigitalesonline.es",
+    "relay-server": "remoto.negociosdigitalesonline.es",
+    "key": "sDUE7s9NgN2R0kJqMZbThSxLR9k8xdRvOXxG8f+ubGE=",
+    "allow-auto-update": "Y",
+    "hide-server-settings": "Y",
+    "hide-proxy-settings": "Y",
+    "hide-websocket-settings": "Y",
+    "hide-help-cards": "Y"
+  },
+  "default-settings": {
+    "verification-method": "use-both-passwords",
+    "approve-mode": "both"
+  }
+}

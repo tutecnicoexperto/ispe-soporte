@@ -1,0 +1,13 @@
+{
+  "app-name": "ISPE-Tecnico",
+  "disable-account": "Y",
+  "disable-ab": "Y",
+  "override-settings": {
+    "custom-rendezvous-server": "remoto.negociosdigitalesonline.es",
+    "relay-server": "remoto.negociosdigitalesonline.es",
+    "key": "sDUE7s9NgN2R0kJqMZbThSxLR9k8xdRvOXxG8f+ubGE=",
+    "allow-auto-update": "Y",
+    "hide-server-settings": "Y",
+    "hide-help-cards": "Y"
+  }
+}
