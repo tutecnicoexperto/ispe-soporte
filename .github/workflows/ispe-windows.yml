@@ -223,18 +223,6 @@ jobs:
 
       - uses: microsoft/setup-msbuild@v2
 
-      - name: Firmar custom.txt de cada variante
-        env:
-          ISPE_FIRMA: ${{ secrets.ISPE_FIRMA }}
-        shell: bash
-        run: |
-          pip3 install -q pynacl
-          for j in ../ispe/variantes/*.json; do
-            v=$(basename "$j" .json)
-            python3 ../ispe/firmar_custom.py "$j" > "../custom-$v.txt"
-            echo "$v: $(wc -c < ../custom-$v.txt) bytes"
-          done
-
       - name: Empaquetar variantes (exe + msi)
         run: |
           sed -i '/dpiAware/d' res/manifest.xml
@@ -242,16 +230,16 @@ jobs:
           New-Item -ItemType Directory -Force -Path ../salida | Out-Null
           $ver = "${{ env.ISPE_VER }}"
           $verMsi = $ver.Replace("-", ".")
-          foreach ($j in Get-ChildItem ../ispe/variantes/*.json) {
-            $app = $j.BaseName
-            $conn = (Get-Content $j.FullName -Raw | ConvertFrom-Json)."conn-type"
-            Write-Host "=== $app (conn-type: $conn) ==="
+          # Una sola variante y SIN custom.txt: con custom.txt el servidor lanzado por el servicio
+          # caía en bucle (21/10/2026); las opciones van compiladas (ispe/aplicar_marca.py).
+          foreach ($app in @("ISPE-Soporte")) {
+            $conn = ""
+            Write-Host "=== $app ==="
             # Carpeta de la variante: ejecutable con el nombre de la app + su custom.txt firmado
             $dist = "dist-$app"
             if (Test-Path $dist) { Remove-Item -Recurse -Force $dist }
             Copy-Item -Recurse ./rustdesk $dist
             Move-Item "$dist/rustdesk.exe" "$dist/$app.exe"
-            Copy-Item "../custom-$app.txt" "$dist/custom.txt"
             # Ejecutable autoextraíble (sirve para soporte puntual, para instalar y para actualizar)
             Push-Location libs/portable
             python3 ./generate.py -f "../../$dist/" -o . -e "../../$dist/$app.exe"
@@ -286,8 +274,7 @@ jobs:
           name: ISPE Soporte ${{ env.ISPE_VER }}
           body: |
             ISPE Soporte ${{ env.ISPE_VER }} (RustDesk ${{ inputs.version }} + marca ISPE, revisión ${{ inputs.revision }}).
-            - **ISPE-Soporte**: para clientes (solo recibe conexiones). `.exe` para soporte puntual o instalar; `.msi` para despliegue.
-            - **ISPE-Tecnico**: para técnicos de ISPE.
+            - **ISPE-Soporte**: `.exe` para soporte puntual o instalar (acceso desatendido); `.msi` para despliegue masivo. Sirve para clientes y técnicos.
             Servidor: remoto.negociosdigitalesonline.es. Código fuente: este repositorio + rustdesk/rustdesk ${{ inputs.version }} (AGPL-3.0).
           files: salida/*
           make_latest: ${{ inputs.publicar }}

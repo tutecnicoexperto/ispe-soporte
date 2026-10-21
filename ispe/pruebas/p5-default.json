@@ -1,7 +1,0 @@
-{
-  "app-name": "ISPE-Soporte",
-  "default-settings": {
-    "verification-method": "use-both-passwords",
-    "approve-mode": "both"
-  }
-}

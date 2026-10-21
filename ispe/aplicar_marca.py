@@ -72,6 +72,26 @@ def main():
         ('&["rs-ny.rustdesk.com"]', f'&["{SERVIDOR}"]'),
         ('"OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw="', f'"{CLAVE_SERVIDOR}"'),
     ])
+    # Opciones fijas compiladas en el binario (en lugar de custom.txt: con custom.txt el servidor
+    # de Windows lanzado por el servicio en la sesión del usuario cae en bucle, 21/10/2026).
+    #  - OVERWRITE: actualización automática activada siempre.
+    #  - BUILTIN:   ocultar ajustes de servidor/proxy/websocket y tarjetas de ayuda.
+    #  - HARD:      sin cuenta ni libreta de direcciones de RustDesk (no tenemos servidor Pro).
+    def mapa(pares):
+        return ("RwLock::new([" + ", ".join(f'("{k}", "{v}")' for k, v in pares)
+                + "].iter().map(|(k, v)| (k.to_string(), v.to_string())).collect())")
+    sustituir(src, "libs/hbb_common/src/config.rs", [
+        ("pub static ref OVERWRITE_SETTINGS: RwLock<HashMap<String, String>> = Default::default();",
+         "pub static ref OVERWRITE_SETTINGS: RwLock<HashMap<String, String>> = "
+         + mapa([("allow-auto-update", "Y")]) + ";"),
+        ("pub static ref BUILTIN_SETTINGS: RwLock<HashMap<String, String>> = Default::default();",
+         "pub static ref BUILTIN_SETTINGS: RwLock<HashMap<String, String>> = "
+         + mapa([("hide-server-settings", "Y"), ("hide-proxy-settings", "Y"),
+                 ("hide-websocket-settings", "Y"), ("hide-help-cards", "Y")]) + ";"),
+        ("pub static ref HARD_SETTINGS: RwLock<HashMap<String, String>> = Default::default();",
+         "pub static ref HARD_SETTINGS: RwLock<HashMap<String, String>> = "
+         + mapa([("disable-account", "Y"), ("disable-ab", "Y")]) + ";"),
+    ])
     sustituir(src, "src/common.rs", [
         ('const KEY: &str = "5Qbwsde3unUcJBtrx9ZkvUmwFNoExHzpryHuPUdqlWM=";',
          f'const KEY: &str = "{CLAVE_FIRMA_CUSTOM}";'),

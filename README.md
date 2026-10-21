@@ -12,7 +12,7 @@ En [Releases](../../releases/latest):
 |---|---|---|
 | `ISPE-Soporte-<ver>-x86_64.exe` | Clientes | Doble clic: muestra ID y contraseña para un soporte puntual. Desde el propio programa se puede **instalar** (acceso desatendido). |
 | `ISPE-Soporte-<ver>-x86_64.msi` | Clientes | Instalación silenciosa o masiva (`msiexec /i ... /qn`). |
-| `ISPE-Tecnico-<ver>-x86_64.exe/.msi` | Técnicos de ISPE | Cliente completo para conectarse a los equipos. |
+| (mismo programa) | Técnicos de ISPE | El mismo ISPE-Soporte sirve para conectarse a los equipos. |
 
 Acceso desatendido: tras instalar, fijar la contraseña permanente (como administrador):
 
