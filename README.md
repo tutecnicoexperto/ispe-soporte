@@ -30,15 +30,18 @@ Acceso desatendido: tras instalar, fijar la contraseña permanente (como adminis
    actualizan solos** en las siguientes 24 h (solo cuando no hay ninguna sesión remota abierta).
 
 Para cambiar logo o colores: `ispe/marca/` (regenerar con `ispe/dibujar_escudo.py` y
-`ispe/generar_marca.py`). Para cambiar opciones de una variante: `ispe/variantes/*.json`.
+`ispe/generar_marca.py`). Para cambiar opciones de una variante: `VARIANTES` y los mapas de ajustes en `ispe/aplicar_marca.py`.
 
 ## Cómo funciona
 
 - `ispe/aplicar_marca.py` parchea el código oficial descargado en cada compilación: servidor y
   clave, nombre, iconos, textos del ejecutable y la actualización automática (consulta
   `ispe/latest.json` y descarga solo de las releases de este repositorio).
-- Cada variante lleva junto al ejecutable un `custom.txt` firmado con nuestra clave (secreto
-  `ISPE_FIRMA`), el mismo mecanismo que usa RustDesk Pro para sus clientes personalizados.
+- Cada variante se **compila por separado** con su nombre y sus ajustes fijos (`VARIANTES` en
+  `ispe/aplicar_marca.py`): ISPE-Soporte con `conn-type=incoming`, ISPE-Tecnico completo.
+- No se usa `custom.txt`: con él, el servidor que lanza el servicio de Windows en la sesión del
+  usuario caía en bucle (pánico, código 0x3). `ispe/variantes/*.json` y `ispe/firmar_custom.py`
+  quedan solo como referencia.
 
 ## Licencia
 
