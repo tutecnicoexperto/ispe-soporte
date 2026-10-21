@@ -114,6 +114,11 @@ jobs:
   windows:
     needs: [bridge, topmost]
     runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        # Cada variante se compila con su nombre y ajustes (ispe/aplicar_marca.py VARIANTES)
+        variante: [ISPE-Soporte, ISPE-Tecnico]
     defaults:
       run:
         working-directory: src
@@ -137,7 +142,7 @@ jobs:
           path: src
 
       - name: Aplicar marca ISPE
-        run: python ..\ispe\aplicar_marca.py . ${{ inputs.revision }}
+        run: python ..\ispe\aplicar_marca.py . ${{ inputs.revision }} ${{ matrix.variante }}
 
       - name: Puente generado
         uses: actions/download-artifact@v4
@@ -230,12 +235,12 @@ jobs:
           New-Item -ItemType Directory -Force -Path ../salida | Out-Null
           $ver = "${{ env.ISPE_VER }}"
           $verMsi = $ver.Replace("-", ".")
-          # Una sola variante y SIN custom.txt: con custom.txt el servidor lanzado por el servicio
-          # caía en bucle (21/10/2026); las opciones van compiladas (ispe/aplicar_marca.py).
-          foreach ($app in @("ISPE-Soporte")) {
-            $conn = ""
+          # SIN custom.txt: con custom.txt el servidor lanzado por el servicio caía en bucle
+          # (21/10/2026); nombre y opciones van compilados por variante (ispe/aplicar_marca.py).
+          foreach ($app in @("${{ matrix.variante }}")) {
+            $conn = if ($app -eq "ISPE-Soporte") { "incoming" } else { "" }
             Write-Host "=== $app ==="
-            # Carpeta de la variante: ejecutable con el nombre de la app + su custom.txt firmado
+            # Carpeta de la variante: ejecutable con el nombre de la app
             $dist = "dist-$app"
             if (Test-Path $dist) { Remove-Item -Recurse -Force $dist }
             Copy-Item -Recurse ./rustdesk $dist
@@ -264,8 +269,21 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ispe-soporte-${{ env.ISPE_VER }}
+          name: salida-${{ matrix.variante }}
           path: salida/*
+
+  # 4) Publicar: una sola release con las dos variantes y aviso de versión a los equipos
+  publicar:
+    needs: [windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: salida-*
+          merge-multiple: true
+          path: salida
 
       - name: Publicar release ${{ env.ISPE_VER }}
         uses: softprops/action-gh-release@v2
@@ -274,19 +292,20 @@ jobs:
           name: ISPE Soporte ${{ env.ISPE_VER }}
           body: |
             ISPE Soporte ${{ env.ISPE_VER }} (RustDesk ${{ inputs.version }} + marca ISPE, revisión ${{ inputs.revision }}).
-            - **ISPE-Soporte**: `.exe` para soporte puntual o instalar (acceso desatendido); `.msi` para despliegue masivo. Sirve para clientes y técnicos.
+            - **ISPE-Soporte** (clientes): solo recibe conexiones. `.exe` para soporte puntual o instalar (acceso desatendido); `.msi` para despliegue masivo.
+            - **ISPE-Tecnico** (técnicos de ISPE): cliente completo para conectarse a los equipos.
             Servidor: remoto.negociosdigitalesonline.es. Código fuente: este repositorio + rustdesk/rustdesk ${{ inputs.version }} (AGPL-3.0).
           files: salida/*
           make_latest: ${{ inputs.publicar }}
 
       - name: Avisar a los equipos instalados (ispe/latest.json)
         if: ${{ inputs.publicar }}
-        working-directory: .
         shell: bash
         run: |
           echo "{\"url\": \"https://github.com/${{ github.repository }}/releases/tag/${{ env.ISPE_VER }}\"}" > ispe/latest.json
           git config user.name "ISPE build"
           git config user.email "info@tutecnicoexperto.com"
+          git pull -q --rebase || true
           git add ispe/latest.json
           git commit -m "Última versión: ${{ env.ISPE_VER }}"
           git push

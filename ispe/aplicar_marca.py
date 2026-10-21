@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Aplica la marca «ISPE Soporte» sobre una copia limpia del código oficial de RustDesk.
 
-Uso:  python3 ispe/aplicar_marca.py <carpeta-del-codigo-rustdesk> <revision-ispe>
-      (revisión 1-9: nuestra versión será <versión-rustdesk>-<revisión>, p. ej. 1.5.0-1)
+Uso:  python3 ispe/aplicar_marca.py <carpeta-del-codigo-rustdesk> <revision-ispe> <variante>
+      revisión 1-9: nuestra versión será <versión-rustdesk>-<revisión>, p. ej. 1.5.0-3
+      variante: ISPE-Soporte (clientes: solo recibe conexiones) | ISPE-Tecnico (técnicos: completo)
 
 Lo ejecuta el workflow de GitHub Actions justo después de descargar rustdesk/rustdesk, así el
 repositorio solo guarda nuestra personalización y subir de versión es cambiar un número.
@@ -28,7 +29,12 @@ import sys
 SERVIDOR = "remoto.negociosdigitalesonline.es"
 CLAVE_SERVIDOR = "sDUE7s9NgN2R0kJqMZbThSxLR9k8xdRvOXxG8f+ubGE="      # id_ed25519.pub de hbbs (CT183)
 CLAVE_FIRMA_CUSTOM = "ybrGVGy627hCRi+qD38M45N4LYnM3n/TpdpBvc9fruo="                        # pública; firma los custom.txt
-NOMBRE_APP = "ISPE-Soporte"
+# Variantes: cada una se compila por separado con su nombre y sus ajustes fijos (HARD_SETTINGS).
+# conn-type=incoming deja el cliente en «solo recibir» (pantalla simple con ID y contraseña).
+VARIANTES = {
+    "ISPE-Soporte": [("conn-type", "incoming")],
+    "ISPE-Tecnico": [],
+}
 EMPRESA = "ISPE Internet Seguro para Empresas"
 PRODUCTO = "ISPE Soporte"
 DESCRIPCION = "ISPE Soporte - Asistencia remota"
@@ -62,9 +68,11 @@ def copiar(src, origen, destinos):
 
 
 def main():
-    if len(sys.argv) != 3 or not sys.argv[2].isdigit() or not 1 <= int(sys.argv[2]) <= 9:
+    if (len(sys.argv) != 4 or not sys.argv[2].isdigit() or not 1 <= int(sys.argv[2]) <= 9
+            or sys.argv[3] not in VARIANTES):
         sys.exit(__doc__)
-    src, revision = sys.argv[1], sys.argv[2]
+    src, revision, NOMBRE_APP = sys.argv[1], sys.argv[2], sys.argv[3]
+    print(f"Variante: {NOMBRE_APP}")
 
     print("1-3. Servidor, clave, nombre y firma de custom.txt")
     sustituir(src, "libs/hbb_common/src/config.rs", [
@@ -90,7 +98,7 @@ def main():
                  ("hide-websocket-settings", "Y"), ("hide-help-cards", "Y")]) + ";"),
         ("pub static ref HARD_SETTINGS: RwLock<HashMap<String, String>> = Default::default();",
          "pub static ref HARD_SETTINGS: RwLock<HashMap<String, String>> = "
-         + mapa([("disable-account", "Y"), ("disable-ab", "Y")]) + ";"),
+         + mapa([("disable-account", "Y"), ("disable-ab", "Y")] + VARIANTES[NOMBRE_APP]) + ";"),
     ])
     sustituir(src, "src/common.rs", [
         ('const KEY: &str = "5Qbwsde3unUcJBtrx9ZkvUmwFNoExHzpryHuPUdqlWM=";',
